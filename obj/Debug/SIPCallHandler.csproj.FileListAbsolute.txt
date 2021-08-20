@@ -7,7 +7,6 @@ C:\Development\SIPCallHandler\bin\Debug\Newtonsoft.Json.dll
 C:\Development\SIPCallHandler\bin\Debug\com.Xgensoftware.Core.pdb
 C:\Development\SIPCallHandler\bin\Debug\com.Xgensoftware.Core.dll.config
 C:\Development\SIPCallHandler\bin\Debug\Newtonsoft.Json.xml
-C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.csproj.AssemblyReference.cache
 C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.Form1.resources
 C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.Properties.Resources.resources
 C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.csproj.GenerateResource.cache
@@ -15,3 +14,4 @@ C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.csproj.CoreCompileInputs.
 C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.csproj.CopyComplete
 C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.exe
 C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.pdb
+C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.csprojAssemblyReference.cache

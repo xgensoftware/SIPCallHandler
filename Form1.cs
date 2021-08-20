@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace SIPCallHandler
         Logging _log = null;
         OzekiService _ozekiService = null;
         Thread _workerThread = null;
+
+        Logging _logFile = null;
         #endregion
 
         void LogMessage(string message)
@@ -42,12 +45,15 @@ namespace SIPCallHandler
             this.Load += Form1_Load;
             this.FormClosing += Form1_FormClosing;
 
-           
+            var logFile = string.Format(ConfigurationManager.AppSettings["LogFile"].ToString(), DateTime.Now.ToString("yyyyMMdd"));
+            _log = new Logging(logFile);
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if(_workerThread != null)
+            LogMessage("********* SipCallHandler application stopping *********");
+
+            if (_workerThread != null)
             {
                 if (_ozekiService != null)
                     _ozekiService.Stop();
@@ -59,6 +65,7 @@ namespace SIPCallHandler
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            LogMessage("********* SipCallHandler application starting *********");
             _ozekiService = new OzekiService();
             _ozekiService.OnMessageEvent += _ozekiService_OnMessageEvent;
 
