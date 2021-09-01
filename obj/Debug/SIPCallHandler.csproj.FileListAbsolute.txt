@@ -14,4 +14,6 @@ C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.csproj.CoreCompileInputs.
 C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.csproj.CopyComplete
 C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.exe
 C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.pdb
-C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.csprojAssemblyReference.cache
+C:\Development\SIPCallHandler\obj\Debug\SIPCallHandler.csproj.AssemblyReference.cache
+C:\Development\SIPCallHandler\bin\Debug\RestSharp.dll
+C:\Development\SIPCallHandler\bin\Debug\RestSharp.xml

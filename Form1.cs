@@ -49,7 +49,7 @@ namespace SIPCallHandler
             _log = new Logging(logFile);
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e) 
         {
             LogMessage("********* SipCallHandler application stopping *********");
 

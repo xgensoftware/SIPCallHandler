@@ -1,0 +1,24 @@
+20210901 10:15:14 INFO: ********* SipCallHandler application starting *********
+20210901 10:15:14 INFO: OzekiService starting....
+20210901 10:15:16 INFO: Registration succeeded - Online!
+20210901 10:15:33 INFO: Incoming call from  <Sip:17778668026@192.168.1.197:5001>. Caller Id: 100
+20210901 10:15:33 INFO: Call state: Answered:Connected
+20210901 10:15:33 INFO: Contact id handler started
+20210901 10:15:33 INFO: Call state: InCall:Connected
+20210901 10:15:37 INFO: Received:Account: 1234 Event: 100 Zone: 000
+20210901 10:15:40 INFO: Received:Account: 1234 Event: 606 Zone: 000
+20210901 10:15:42 INFO: Contact id handler stopped
+20210901 10:15:47 INFO: Sending text to speech: The unit id for the current device is 1234. Please record a message
+20210901 10:15:47 INFO: Text To Speach stopped
+20210901 10:16:54 INFO: ********* SipCallHandler application starting *********
+20210901 10:16:54 INFO: OzekiService starting....
+20210901 10:16:56 INFO: Registration succeeded - Online!
+20210901 10:17:21 INFO: Incoming call from  <Sip:17778668026@192.168.1.197:5001>. Caller Id: 100
+20210901 10:17:21 INFO: Call state: Answered:Connected
+20210901 10:17:21 INFO: Contact id handler started
+20210901 10:17:21 INFO: Call state: InCall:Connected
+20210901 10:17:24 INFO: Received:Account: 1234 Event: 100 Zone: 000
+20210901 10:17:28 INFO: Received:Account: 1234 Event: 606 Zone: 000
+20210901 10:17:30 INFO: Contact id handler stopped
+20210901 10:17:35 INFO: Sending text to speech: The unit id for the current device is 1234. Please record a message
+20210901 10:17:35 INFO: Text To Speach stopped

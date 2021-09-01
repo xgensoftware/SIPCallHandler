@@ -27,7 +27,11 @@ namespace SIPCallHandler
         ContactIdHandler _contactIdHandler;
         TextToSpeech _txtToSpeech;
         WaveStreamPlayback _wavPlayer;
+        WaveStreamRecorder _wavRecorder;
+        //Microphone _microphone;
+        Speaker _speaker;
 
+        string _recordedFile = string.Empty;
         #endregion
 
         #region Private Methods
@@ -76,7 +80,7 @@ namespace SIPCallHandler
         {
             _txtToSpeech = new TextToSpeech();
 
-            Thread.Sleep(3000);
+            Thread.Sleep(4000);
              _phoneCallAudioSender.AttachToCall(_call);
             _mediaConnector.Connect(_txtToSpeech, _phoneCallAudioSender);
 
@@ -103,7 +107,7 @@ namespace SIPCallHandler
             _call.StopDTMFSignal(tone);
         }
 
-        void SetupWavPlayer(string pathToFile)
+        void PlayWave(string pathToFile)
         {
             _wavPlayer = new WaveStreamPlayback(pathToFile);
 
@@ -114,7 +118,7 @@ namespace SIPCallHandler
 
             _wavPlayer.Start();
 
-            OnMessageEvent?.Invoke("Playing wave file");
+            OnMessageEvent?.Invoke($"Playing wave file {pathToFile}");
         }
 
         void StopWavPlayer()
@@ -125,9 +129,58 @@ namespace SIPCallHandler
             OnMessageEvent?.Invoke("Stopping wave player");
         }
 
-        void StartRecording()
+        void StartRecording(string account)
         {
+            //_microphone = Microphone.GetDefaultDevice();
+            _speaker = Speaker.GetDefaultDevice();
 
+            //_microphone.Start();
+            //_mediaConnector.Connect(_microphone, _phoneCallAudioSender);
+
+            _speaker.Start();
+            _mediaConnector.Connect(_phoneCallAudioReceiver, _speaker);
+ 
+            _recordedFile = string.Format("{0}_{1}.wav", account,DateTime.Now.ToString("yyyyMMddHHmmss"));
+            _wavRecorder = new WaveStreamRecorder(_recordedFile);
+            _wavRecorder.Stopped += _wavRecorder_Stopped;
+
+            //_mediaConnector.Connect(_microphone, _wavRecorder);
+            _mediaConnector.Connect(_phoneCallAudioReceiver, _wavRecorder);
+
+            _phoneCallAudioSender.AttachToCall(_call);
+            _phoneCallAudioReceiver.AttachToCall(_call);
+
+            OnMessageEvent?.Invoke($"Recording to {_recordedFile}");
+
+            _wavRecorder.Start();
+            Thread.Sleep(5000);
+            _wavRecorder.Stop();
+        }
+
+        private void StopRecording()
+        {
+            _wavRecorder.Dispose();
+            //_microphone.Dispose();
+            _speaker.Dispose();
+
+            _phoneCallAudioReceiver.Detach();
+            _phoneCallAudioSender.Detach();
+            _mediaConnector.Dispose();
+        }
+
+        private void _wavRecorder_Stopped(object sender, EventArgs e)
+        {
+            // dispose
+            StopRecording();
+
+            Thread.Sleep(2000);
+
+            //Playback
+            PlayWave(_recordedFile);
+            Thread.Sleep(1000);
+            StopWavPlayer();
+
+            _call.HangUp();
         }
 
         private void _softPhone_IncomingCall(object sender, Ozeki.Media.VoIPEventArgs<IPhoneCall> e)
@@ -216,6 +269,7 @@ namespace SIPCallHandler
 
         private void _contactIdHandler_ReceivedNotification(object sender, ContactIdNotificationEventArg e)
         {
+            var accountType = _call.DialInfo.CallerID == "100" ? "RL01" : "RL03";
             OnMessageEvent?.Invoke($"Received:Account: {e.AccountNumber} Event: {e.EventCode} Zone: {e.ZoneNumber}");
             if(e.EventCode == "606")
             {
@@ -223,20 +277,30 @@ namespace SIPCallHandler
 
                 StopContactIdConnector();
 
+                //put unit in 2-way
+                SendDtmfTone(DtmfNamedEvents.Dtmf6);
+
                 //2. repeat unit id back
-                StartTextToSpeech($"The unit id for the current device is {e.AccountNumber}");
+                StartTextToSpeech($"The unit id for the current device is {e.AccountNumber}. Please record a message");
                 StopSpeachConnector();
 
                 //3. Lookup account number in salesforce?
                 // if the account is found with active status goto step 6 else goto 4
+                var sfHelper = new SalesForceHelper();
+                var exists = sfHelper.AssetExists($"{accountType}-{e.AccountNumber}");
+                if (!exists)
+                {
+                    //4.Record message from caller
+                    StartRecording(e.AccountNumber);
 
-                //4.Record message from caller
-                
-                //5. Playback their message then goto 7
+                    //5. Playback their message then goto 7 _wavRecorder_Stopped
 
+                }
+                else
+                {
+                    //6. Play text to speech letting the caller know the account is in use
 
-                //6. Play text to speech letting the caller know the account is in use
-
+                }
                 //7. hangup
             }
         }
