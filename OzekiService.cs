@@ -32,6 +32,9 @@ namespace SIPCallHandler
         Speaker _speaker;
 
         string _recordedFile = string.Empty;
+
+        bool _listenInRcvd = false;
+        string _accountNumber = string.Empty;
         #endregion
 
         #region Private Methods
@@ -65,8 +68,8 @@ namespace SIPCallHandler
 
         void StopContactIdConnector()
         {
-            _phoneCallAudioReceiver.Detach();
-            _phoneCallAudioSender.Detach();
+            //_phoneCallAudioReceiver.Detach();
+            //_phoneCallAudioSender.Detach();
 
             _mediaConnector.Disconnect(_contactIdHandler, _phoneCallAudioSender);
             _mediaConnector.Disconnect(_phoneCallAudioReceiver, _contactIdHandler);
@@ -74,6 +77,14 @@ namespace SIPCallHandler
             _contactIdHandler.Stop();
 
             OnMessageEvent?.Invoke("Contact id handler stopped");
+
+            //Thread.Sleep(1000);
+            ////2. repeat unit id back
+            ////StartTextToSpeech($"The unit id for the current device is {_accountNumber}. Please record a message");
+            ////StopSpeachConnector();
+            //PlayWave(@"C:\Development\SIPCallHandler\emergency.wav");
+            //StopWavPlayer();
+
         }
 
         void StartTextToSpeech(string message)
@@ -91,7 +102,7 @@ namespace SIPCallHandler
 
         void StopSpeachConnector()
         {
-            _phoneCallAudioSender.Detach();
+            //_phoneCallAudioSender.Detach();
             _mediaConnector.Disconnect(_txtToSpeech, _phoneCallAudioSender);
             _txtToSpeech.Stop();
 
@@ -103,15 +114,17 @@ namespace SIPCallHandler
         {
             Thread.Sleep(1000);
             _call.StartDTMFSignal(tone);
-            Thread.Sleep(80);
+            Thread.Sleep(1000);
             _call.StopDTMFSignal(tone);
+
+            OnMessageEvent?.Invoke($"Sending DTMF {tone.ToString()}");
         }
 
         void PlayWave(string pathToFile)
         {
             _wavPlayer = new WaveStreamPlayback(pathToFile);
 
-            Thread.Sleep(3000);
+            Thread.Sleep(2000);
 
             _mediaConnector.Connect(_wavPlayer, _phoneCallAudioSender);
             _phoneCallAudioSender.AttachToCall(_call);
@@ -123,7 +136,7 @@ namespace SIPCallHandler
 
         void StopWavPlayer()
         {
-            _phoneCallAudioSender.Detach();
+            //_phoneCallAudioSender.Detach();
             _mediaConnector.Disconnect(_wavPlayer, _phoneCallAudioSender);
             _wavPlayer.Stop();
             OnMessageEvent?.Invoke("Stopping wave player");
@@ -147,8 +160,8 @@ namespace SIPCallHandler
             //_mediaConnector.Connect(_microphone, _wavRecorder);
             _mediaConnector.Connect(_phoneCallAudioReceiver, _wavRecorder);
 
-            _phoneCallAudioSender.AttachToCall(_call);
-            _phoneCallAudioReceiver.AttachToCall(_call);
+            //_phoneCallAudioSender.AttachToCall(_call);
+            //_phoneCallAudioReceiver.AttachToCall(_call);
 
             OnMessageEvent?.Invoke($"Recording to {_recordedFile}");
 
@@ -163,8 +176,8 @@ namespace SIPCallHandler
             //_microphone.Dispose();
             _speaker.Dispose();
 
-            _phoneCallAudioReceiver.Detach();
-            _phoneCallAudioSender.Detach();
+            //_phoneCallAudioReceiver.Detach();
+            //_phoneCallAudioSender.Detach();
             _mediaConnector.Dispose();
         }
 
@@ -199,12 +212,45 @@ namespace SIPCallHandler
             if(e.State == CallState.Answered)
             {
                 SetupDevices();
+
+                //Thread.Sleep(2000);
+
+                //var accountType = _call.DialInfo.CallerID == "100" ? "RL01" : "RL03";
+
+                //StopContactIdConnector();
+
+                ////put unit in 2-way
+                //SendDtmfTone(DtmfNamedEvents.Dtmf6);
+
+                ////2. repeat unit id back
+                //StartTextToSpeech($"The unit id for the current device is {_accountNumber}. Please record a message");
+                //StopSpeachConnector();
+
+                ////3. Lookup account number in salesforce?
+                //// if the account is found with active status goto step 6 else goto 4
+                //var sfHelper = new SalesForceHelper();
+                //var exists = sfHelper.AssetExists($"{accountType}-{_accountNumber}");
+                //if (!exists)
+                //{
+                //    //4.Record message from caller
+                //    StartRecording(_accountNumber);
+
+                //    //5. Playback their message then goto 7 _wavRecorder_Stopped
+
+                //}
+                //else
+                //{
+                //    //6. Play text to speech letting the caller know the account is in use
+
+                //}
+                //7. hangup
             }
             else if(e.State == CallState.Completed)
             {
-                
 
                 OnMessageEvent?.Invoke($"Call {_call.DialInfo.CallerID} ended.");
+                _listenInRcvd = false;
+                _accountNumber = string.Empty;
             }
         }
 
@@ -227,7 +273,7 @@ namespace SIPCallHandler
 
             foreach (var s in _softPhone.Codecs)
             {
-                //OnMessageEvent?.Invoke($"Codec: {s.CodecName}:{s.CodecType}, Payload Type: {s.PayloadType.ToString()}");
+                OnMessageEvent?.Invoke($"Codec: {s.CodecName}:{s.CodecType}, Payload Type: {s.PayloadType.ToString()}");
                 _softPhone.DisableCodec(s.PayloadType);
             }
             _softPhone.EnableCodec(0);
@@ -253,8 +299,14 @@ namespace SIPCallHandler
             
             _contactIdHandler.ContactIdSendFailed += _contactIdHandler_ContactIdSendFailed;
             _contactIdHandler.ContactIdSendSuccessful += _contactIdHandler_ContactIdSendSuccessful;
+            _contactIdHandler.ContactIdSendCompleted += _contactIdHandler_ContactIdSendCompleted;
             _contactIdHandler.ReceivedNotification += _contactIdHandler_ReceivedNotification;
           
+        }
+
+        private void _contactIdHandler_ContactIdSendCompleted(object sender, EventArgs e)
+        {
+            OnMessageEvent?.Invoke("Contact Id completed");
         }
 
         private void _contactIdHandler_ContactIdSendSuccessful(object sender, ContactIDSendEventArgs e)
@@ -269,39 +321,25 @@ namespace SIPCallHandler
 
         private void _contactIdHandler_ReceivedNotification(object sender, ContactIdNotificationEventArg e)
         {
-            var accountType = _call.DialInfo.CallerID == "100" ? "RL01" : "RL03";
             OnMessageEvent?.Invoke($"Received:Account: {e.AccountNumber} Event: {e.EventCode} Zone: {e.ZoneNumber}");
             if(e.EventCode == "606")
             {
+                _listenInRcvd = true;
+                _accountNumber = e.AccountNumber;
+
                 Thread.Sleep(2000);
+                SendDtmfTone(DtmfNamedEvents.Dtmf6);
+                StartTextToSpeech("This is a before test");
+                StopSpeachConnector();
+                OnMessageEvent?.Invoke("Before stop");
 
                 StopContactIdConnector();
 
-                //put unit in 2-way
+                Thread.Sleep(2000);
                 SendDtmfTone(DtmfNamedEvents.Dtmf6);
-
-                //2. repeat unit id back
-                StartTextToSpeech($"The unit id for the current device is {e.AccountNumber}. Please record a message");
+                StartTextToSpeech("This is a after test");
                 StopSpeachConnector();
-
-                //3. Lookup account number in salesforce?
-                // if the account is found with active status goto step 6 else goto 4
-                var sfHelper = new SalesForceHelper();
-                var exists = sfHelper.AssetExists($"{accountType}-{e.AccountNumber}");
-                if (!exists)
-                {
-                    //4.Record message from caller
-                    StartRecording(e.AccountNumber);
-
-                    //5. Playback their message then goto 7 _wavRecorder_Stopped
-
-                }
-                else
-                {
-                    //6. Play text to speech letting the caller know the account is in use
-
-                }
-                //7. hangup
+                OnMessageEvent?.Invoke("After stop");
             }
         }
 
